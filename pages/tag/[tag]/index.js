@@ -1,66 +1,52 @@
-import { useGlobal } from '@/lib/global'
-import { getGlobalNotionData } from '@/lib/notion/getNotionData'
 import BLOG from '@/blog.config'
-import dynamic from 'next/dynamic'
-import { Suspense, useEffect, useState } from 'react'
-import Loading from '@/components/Loading'
-const layout = 'LayoutTag'
+import { siteConfig } from '@/lib/config'
+import { getGlobalData } from '@/lib/db/getSiteData'
+import { getLayoutByTheme } from '@/themes/theme'
+import { useRouter } from 'next/router'
+
 /**
- * 加载默认主题
+ * 标签下的文章列表
+ * @param {*} props
+ * @returns
  */
-const DefaultLayout = dynamic(() => import(`@/themes/${BLOG.THEME}/${layout}`), { ssr: true })
-
 const Tag = props => {
-  const { theme } = useGlobal()
-  const { locale } = useGlobal()
-  const { tag, siteInfo } = props
-  const [Layout, setLayout] = useState(DefaultLayout)
+  // 根据页面路径加载不同Layout文件
+  const Layout = getLayoutByTheme({
+    theme: siteConfig('THEME'),
+    router: useRouter()
+  })
 
-  // 切换主题
-  useEffect(() => {
-    const loadLayout = async () => {
-      const newLayout = await dynamic(() => import(`@/themes/${theme}/${layout}`))
-      setLayout(newLayout)
-    }
-    loadLayout()
-  }, [theme])
-
-  const meta = {
-    title: `${tag} | ${locale.COMMON.TAGS} | ${siteInfo?.title}`,
-    description: siteInfo?.description,
-    image: siteInfo?.pageCover,
-    slug: 'tag/' + tag,
-    type: 'website'
-  }
-  props = { ...props, meta }
-
-  return <Suspense fallback={<Loading/>}>
-    <Layout {...props} />
-  </Suspense>
+  return <Layout {...props} />
 }
 
-export async function getStaticProps({ params: { tag } }) {
+export async function getStaticProps({ params: { tag }, locale }) {
   const from = 'tag-props'
-  const props = await getGlobalNotionData({ from })
+  const props = await getGlobalData({ from, locale })
 
   // 过滤状态
-  props.posts = props.allPages.filter(page => page.type === 'Post' && page.status === 'Published').filter(post => post && post.tags && post.tags.includes(tag))
+  props.posts = props.allPages
+    ?.filter(page => page.type === 'Post' && page.status === 'Published')
+    .filter(post => post && post?.tags && post?.tags.includes(tag))
 
   // 处理文章页数
   props.postCount = props.posts.length
 
   // 处理分页
-  if (BLOG.POST_LIST_STYLE === 'scroll') {
+  if (siteConfig('POST_LIST_STYLE') === 'scroll') {
     // 滚动列表 给前端返回所有数据
-  } else if (BLOG.POST_LIST_STYLE === 'page') {
-    props.posts = props.posts?.slice(0, BLOG.POSTS_PER_PAGE)
+  } else if (siteConfig('POST_LIST_STYLE') === 'page') {
+    props.posts = props.posts?.slice(0, siteConfig('POSTS_PER_PAGE'))
   }
 
   props.tag = tag
   delete props.allPages
   return {
     props,
-    revalidate: parseInt(BLOG.NEXT_REVALIDATE_SECOND)
+    revalidate: siteConfig(
+      'NEXT_REVALIDATE_SECOND',
+      BLOG.NEXT_REVALIDATE_SECOND,
+      props.NOTION_CONFIG
+    )
   }
 }
 
@@ -79,7 +65,7 @@ function getTagNames(tags) {
 
 export async function getStaticPaths() {
   const from = 'tag-static-path'
-  const { tagOptions } = await getGlobalNotionData({ from })
+  const { tagOptions } = await getGlobalData({ from })
   const tagNames = getTagNames(tagOptions)
 
   return {

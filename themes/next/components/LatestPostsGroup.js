@@ -1,7 +1,8 @@
-import BLOG from '@/blog.config'
+import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { checkContainHttp, sliceUrlFromHttp } from '@/lib/utils'
 
 /**
  * 最新文章列表
@@ -26,12 +27,13 @@ const LatestPostsGroup = ({ latestPosts }) => {
       </div>
     </div>
     {latestPosts.map(post => {
-      const selected = currentPath === `${BLOG.SUB_PATH}/${post.slug}`
+      const selected = currentPath === `${siteConfig('SUB_PATH', '')}/${post.slug}`
+      const url = checkContainHttp(post.slug) ? sliceUrlFromHttp(post.slug) : `${siteConfig('SUB_PATH', '')}/${post.slug}`
       return (
         (<Link
           key={post.id}
           title={post.title}
-          href={`${BLOG.SUB_PATH}/${post.slug}`}
+          href={url}
           passHref
           className={'my-1 flex font-light'}>
 
@@ -44,7 +46,7 @@ const LatestPostsGroup = ({ latestPosts }) => {
               'hover:text-white dark:hover:text-white cursor-pointer'
             }
           >
-            <li className="text-line-2">{post.title}</li>
+            <li className="line-clamp-2">{post.title}</li>
           </div>
 
         </Link>)

@@ -1,18 +1,20 @@
-import BLOG from '@/blog.config'
 import BlogAround from './BlogAround'
 import Comment from '@/components/Comment'
 import RecommendPosts from './RecommendPosts'
 import ShareBar from '@/components/ShareBar'
 import TagItem from './TagItem'
-import formatDate from '@/lib/formatDate'
 import { useGlobal } from '@/lib/global'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import ArticleCopyright from './ArticleCopyright'
 import WordCount from './WordCount'
 import NotionPage from '@/components/NotionPage'
-import CONFIG_NEXT from '../config_next'
+import CONFIG from '../config'
 import NotionIcon from '@/components/NotionIcon'
+import LazyImage from '@/components/LazyImage'
+import { formatDateFmt } from '@/lib/utils/formatDate'
+import { siteConfig } from '@/lib/config'
+import WWAds from '@/components/WWAds'
 
 /**
  *
@@ -21,28 +23,29 @@ import NotionIcon from '@/components/NotionIcon'
  */
 export default function ArticleDetail(props) {
   const { post, recommendPosts, prev, next } = props
-  const url = BLOG.LINK + useRouter().asPath
+  const url = siteConfig('LINK') + useRouter().asPath
   const { locale } = useGlobal()
-  const showArticleInfo = CONFIG_NEXT.ARTICLE_INFO
-  const date = formatDate(post?.date?.start_date || post?.createdTime, locale.LOCALE)
+  const showArticleInfo = siteConfig('NEXT_ARTICLE_INFO', null, CONFIG)
+  // 动画样式  首屏卡片不用，后面翻出来的加动画
+  const aosProps = {
+    'data-aos': 'fade-down',
+    'data-aos-duration': '400',
+    'data-aos-once': 'true',
+    'data-aos-anchor-placement': 'top-bottom'
+  }
 
   return (
-        <div id="container"
+        <div id="article-wrapper"
             className="shadow md:hover:shadow-2xl overflow-x-auto flex-grow mx-auto w-screen md:w-full ">
             <div itemScope itemType="https://schema.org/Movie"
-                data-aos="fade-down"
-                data-aos-duration="300"
-                data-aos-once="true"
-                data-aos-anchor-placement="top-bottom"
-                className="subpixel-antialiased overflow-y-hidden py-10 px-5 lg:pt-24 md:px-24  dark:border-gray-700 bg-white dark:bg-hexo-black-gray"
+                className="subpixel-antialiased overflow-y-hidden py-10 px-5 lg:pt-24 md:px-24  dark:border-gray-700 bg-white dark:bg-hexo-black-gray article-padding"
             >
 
-                {showArticleInfo && <header>
+                {showArticleInfo && <header {...aosProps}>
                     {/* 头图 */}
-                    {CONFIG_NEXT.POST_HEADER_IMAGE_VISIBLE && post?.type && !post?.type !== 'Page' && post?.page_cover && (
+                    {siteConfig('NEXT_POST_HEADER_IMAGE_VISIBLE', null, CONFIG) && post?.type && !post?.type !== 'Page' && post?.pageCover && (
                         <div className="w-full relative md:flex-shrink-0 overflow-hidden">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img alt={post.title} src={post?.page_cover} className='object-center w-full' />
+                            <LazyImage alt={post.title} src={post?.pageCover} className='object-center w-full' />
                         </div>
                     )}
 
@@ -52,18 +55,18 @@ export default function ArticleDetail(props) {
                     </div>
 
                     {/* meta */}
-                    <section className="mt-2 text-gray-400 dark:text-gray-400 font-light leading-7 text-sm">
+                    <section className="mt-2 text-gray-500 dark:text-gray-400 font-light leading-7 text-sm">
                         <div className='flex flex-wrap justify-center'>
                             {post?.type !== 'Page' && (<>
                                 <Link
-                                    href={`/archive#${post?.date?.start_date?.substr(0, 7)}`}
+                                    href={`/archive#${formatDateFmt(post?.publishDate, 'yyyy-MM')}`}
                                     passHref
                                     legacyBehavior>
                                     <div className="pl-1 mr-2 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 border-b dark:border-gray-500 border-dashed">
-                                        <i className='far fa-calendar mr-1' /> {date}
+                                        <i className='far fa-calendar mr-1' /> {post?.publishDay}
                                     </div>
                                 </Link>
-                                <span className='mr-2'> | <i className='far fa-calendar-check mr-2' />{post.lastEditedTime} </span>
+                                <span className='mr-2'> | <i className='far fa-calendar-check mr-2' />{post.lastEditedDay} </span>
 
                                 <div className="hidden busuanzi_container_page_pv font-light mr-2">
                                     <i className='mr-1 fas fa-eye' />
@@ -79,20 +82,11 @@ export default function ArticleDetail(props) {
                 </header>}
 
                 {/* Notion内容主体 */}
-                <article id='notion-article' className='px-1 max-w-3xl mx-auto'>
+                <article className='mx-auto'>
+                    <WWAds className="w-full" orientation="horizontal" />
                     {post && (<NotionPage post={post} />)}
+                    <WWAds className="w-full" orientation="horizontal" />
                 </article>
-
-                <section className="px-1 py-2 my-1 text-sm font-light overflow-auto text-gray-600  dark:text-gray-400">
-                    {/* 文章内嵌广告 */}
-                    <ins className="adsbygoogle"
-                        style={{ display: 'block', textAlign: 'center' }}
-                        data-adtest="on"
-                        data-ad-layout="in-article"
-                        data-ad-format="fluid"
-                        data-ad-client="ca-pub-2708419466378217"
-                        data-ad-slot="3806269138" />
-                </section>
 
                 {showArticleInfo && <>
 
@@ -100,29 +94,28 @@ export default function ArticleDetail(props) {
                     <ShareBar post={post} />
 
                     {/* 版权声明 */}
-                    {post.type === 'Post' && <ArticleCopyright author={BLOG.AUTHOR} url={url} />}
+                    {post?.type === 'Post' && <ArticleCopyright author={siteConfig('AUTHOR')} url={url} />}
 
                     {/* 推荐文章 */}
-                    {post.type === 'Post' && <RecommendPosts currentPost={post} recommendPosts={recommendPosts} />}
+                    {post?.type === 'Post' && <RecommendPosts currentPost={post} recommendPosts={recommendPosts} />}
 
                     <section className="flex justify-between">
                         {/* 分类 */}
                         {post.category && <>
                             <div className="cursor-pointer my-auto text-md mr-2 hover:text-black dark:hover:text-white border-b dark:text-gray-500 border-dashed">
-                                <Link href={`/category/${post.category}`} passHref legacyBehavior>
-                                    <><i className="mr-1 far fa-folder-open" /> {post.category}</>
+                                <Link href={`/category/${post.category}`} legacyBehavior>
+                                    <a><i className="mr-1 far fa-folder-open" /> {post.category}</a>
                                 </Link>
                             </div>
-
                         </>}
 
                         {/* 标签列表 */}
-                        {post.type === 'Post' && (
+                        {post?.type === 'Post' && (
                             <>
                                 {post.tagItems && (
-                                    <div className="flex flex-nowrap leading-8 p-1 py-4 overflow-x-auto">
+                                    <div className="flex items-center flex-nowrap leading-8 p-1 py-4 overflow-x-auto">
                                         <div className="hidden md:block dark:text-gray-300 whitespace-nowrap">
-                                            {locale.COMMON.TAGS}：
+                                            {locale.COMMON.TAGS}:&nbsp;
                                         </div>
                                         {post.tagItems.map(tag => (
                                             <TagItem key={tag.name} tag={tag} />
@@ -132,7 +125,7 @@ export default function ArticleDetail(props) {
                             </>
                         )}
                     </section>
-                    {post.type === 'Post' && <BlogAround prev={prev} next={next} />}
+                    {post?.type === 'Post' && <BlogAround prev={prev} next={next} />}
                 </>}
 
                 {/* 评论互动 */}

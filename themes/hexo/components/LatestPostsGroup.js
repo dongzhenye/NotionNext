@@ -1,8 +1,10 @@
-import BLOG from '@/blog.config'
+import { siteConfig } from '@/lib/config'
+import LazyImage from '@/components/LazyImage'
 import { useGlobal } from '@/lib/global'
 // import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { checkContainHttp, sliceUrlFromHttp } from '@/lib/utils'
 
 /**
  * 最新文章列表
@@ -27,29 +29,20 @@ const LatestPostsGroup = ({ latestPosts, siteInfo }) => {
             </div>
         </div>
         {latestPosts.map(post => {
-          const selected = currentPath === `${BLOG.SUB_PATH}/${post.slug}`
-
-          const headerImage = post?.page_cover ? post.page_cover : siteInfo?.pageCover
+          const headerImage = post?.pageCoverThumbnail ? post.pageCoverThumbnail : siteInfo?.pageCover
+          const url = checkContainHttp(post.slug) ? sliceUrlFromHttp(post.slug) : `${siteConfig('SUB_PATH', '')}/${post.slug}`
+          const selected = currentPath === url
 
           return (
             (<Link
                     key={post.id}
                     title={post.title}
-                    href={`${BLOG.SUB_PATH}/${post.slug}`}
+                    href={url}
                     passHref
                     className={'my-3 flex'}>
 
                     <div className="w-20 h-14 overflow-hidden relative">
-                          {/* <Image
-                            src={headerImage}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                            placeholder='blur'
-                            blurDataURL='/bg_image.jpg'
-                            quality={10}
-                            alt={post.title} /> */}
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={`${headerImage}`} className='object-cover w-full h-full'/>
+                        <LazyImage src={`${headerImage}`} className='object-cover w-full h-full'/>
                     </div>
                     <div
                         className={
@@ -59,8 +52,8 @@ const LatestPostsGroup = ({ latestPosts, siteInfo }) => {
                         }
                     >
                         <div>
-                            <div className='text-line-2'>{post.title}</div>
-                            <div className="text-gray-500">{post.lastEditedTime}</div>
+                            <div className='line-clamp-2 menu-link'>{post.title}</div>
+                            <div className="text-gray-500">{post.lastEditedDay}</div>
                         </div>
                     </div>
 

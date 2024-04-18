@@ -1,8 +1,10 @@
-import BLOG from '@/blog.config'
 import { useEffect, useState } from 'react'
 import Select from './Select'
 import { useGlobal } from '@/lib/global'
-import { ALL_THEME } from '@/lib/theme'
+import { THEMES } from '@/themes/theme'
+import { useRouter } from 'next/router'
+import { siteConfigMap } from '@/lib/config'
+import { getQueryParam } from '@/lib/utils'
 
 /**
  *
@@ -10,18 +12,16 @@ import { ALL_THEME } from '@/lib/theme'
  */
 const DebugPanel = () => {
   const [show, setShow] = useState(false)
-  const { changeTheme, switchTheme, locale } = useGlobal()
+  const { theme, switchTheme, locale } = useGlobal()
+  const router = useRouter()
+  const currentTheme = getQueryParam(router.asPath, 'theme') || theme
   const [siteConfig, updateSiteConfig] = useState({})
-  //   const [themeConfig, updateThemeConfig] = useState({})
-  const [debugTheme, updateDebugTheme] = useState(BLOG.THEME)
 
   // 主题下拉框
-  const themeOptions = ALL_THEME.map(t => ({ value: t, text: t }))
+  const themeOptions = THEMES?.map(t => ({ value: t, text: t }))
 
   useEffect(() => {
-    changeTheme(BLOG.THEME)
-    updateSiteConfig(Object.assign({}, BLOG))
-    // updateThemeConfig(Object.assign({}, ThemeMap[BLOG.THEME].THEME_CONFIG))
+    updateSiteConfig(Object.assign({}, siteConfigMap()))
   }, [])
 
   function toggleShow() {
@@ -29,15 +29,12 @@ const DebugPanel = () => {
   }
 
   function handleChangeDebugTheme() {
-    const newTheme = switchTheme()
-    // updateThemeConfig(Object.assign({}, ThemeMap[newTheme].THEME_CONFIG))
-    updateDebugTheme(newTheme)
+    switchTheme()
   }
 
-  function handleUpdateDebugTheme(e) {
-    changeTheme(e)
-    // updateThemeConfig(Object.assign({}, ThemeMap[theme].THEME_CONFIG))
-    updateDebugTheme(e)
+  function handleUpdateDebugTheme(newTheme) {
+    const query = { ...router.query, theme: newTheme }
+    router.push({ pathname: router.pathname, query })
   }
 
   function filterResult(text) {
@@ -75,7 +72,7 @@ const DebugPanel = () => {
                     <div className='flex'>
                         <Select
                             label={locale.COMMON.THEME_SWITCH}
-                            value={debugTheme}
+                            value={currentTheme}
                             options={themeOptions}
                             onChange={handleUpdateDebugTheme}
                         />

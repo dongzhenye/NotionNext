@@ -1,14 +1,8 @@
-import { getGlobalNotionData } from '@/lib/notion/getNotionData'
-import { Suspense, useEffect, useState } from 'react'
-import { useGlobal } from '@/lib/global'
 import BLOG from '@/blog.config'
-import dynamic from 'next/dynamic'
-import Loading from '@/components/Loading'
-const layout = 'LayoutTagIndex'
-/**
- * 默认主题
- */
-const DefaultLayout = dynamic(() => import(`@/themes/${BLOG.THEME}/${layout}`), { ssr: true })
+import { siteConfig } from '@/lib/config'
+import { getGlobalData } from '@/lib/db/getSiteData'
+import { getLayoutByTheme } from '@/themes/theme'
+import { useRouter } from 'next/router'
 
 /**
  * 标签首页
@@ -16,40 +10,27 @@ const DefaultLayout = dynamic(() => import(`@/themes/${BLOG.THEME}/${layout}`), 
  * @returns
  */
 const TagIndex = props => {
-  const { locale } = useGlobal()
-  const { siteInfo } = props
-  const { theme } = useGlobal()
-  const [Layout, setLayout] = useState(DefaultLayout)
-  // 切换主题
-  useEffect(() => {
-    const loadLayout = async () => {
-      const newLayout = await dynamic(() => import(`@/themes/${theme}/${layout}`))
-      setLayout(newLayout)
-    }
-    loadLayout()
-  }, [theme])
-
-  const meta = {
-    title: `${locale.COMMON.TAGS} | ${siteInfo?.title}`,
-    description: siteInfo?.description,
-    image: siteInfo?.pageCover,
-    slug: 'tag',
-    type: 'website'
-  }
-  props = { ...props, meta }
-
-  return <Suspense fallback={<Loading/>}>
-    <Layout {...props} />
-  </Suspense>
+  // 根据页面路径加载不同Layout文件
+  const Layout = getLayoutByTheme({
+    theme: siteConfig('THEME'),
+    router: useRouter()
+  })
+  return <Layout {...props} />
 }
 
-export async function getStaticProps() {
+export async function getStaticProps(req) {
+  const { locale } = req
+
   const from = 'tag-index-props'
-  const props = await getGlobalNotionData({ from })
+  const props = await getGlobalData({ from, locale })
   delete props.allPages
   return {
     props,
-    revalidate: parseInt(BLOG.NEXT_REVALIDATE_SECOND)
+    revalidate: siteConfig(
+      'NEXT_REVALIDATE_SECOND',
+      BLOG.NEXT_REVALIDATE_SECOND,
+      props.NOTION_CONFIG
+    )
   }
 }
 
