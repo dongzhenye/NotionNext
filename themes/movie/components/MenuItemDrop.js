@@ -15,9 +15,9 @@ export const MenuItemDrop = ({ link }) => {
       onMouseOut={() => changeShow(false)}>
       {!hasSubMenu && (
         <Link
-          href={link?.to}
+          href={link?.href}
           target={link?.target}
-          className='select-none menu-link pl-2 pr-4 no-underline tracking-widest pb-1'>
+          className='select-none menu-link pl-2 pr-4 no-underline tracking-widest pb-1 hover:font-bold'>
           {link?.icon && <i className={link?.icon} />} {link?.name}
           {hasSubMenu && <i className='px-2 fa fa-angle-down'></i>}
         </Link>
@@ -25,7 +25,7 @@ export const MenuItemDrop = ({ link }) => {
 
       {hasSubMenu && (
         <>
-          <div className='cursor-pointer  menu-link pl-2 pr-4  no-underline tracking-widest pb-1'>
+          <div className='cursor-pointer menu-link pl-2 pr-4  no-underline tracking-widest pb-1 hover:font-bold'>
             {link?.icon && <i className={link?.icon} />} {link?.name}
             <i
               className={`px-2 fa fa-angle-down duration-300  ${show ? 'rotate-180' : 'rotate-0'}`}></i>
@@ -43,7 +43,7 @@ export const MenuItemDrop = ({ link }) => {
               <li
                 key={index}
                 className='cursor-pointer text-start dark:bg-hexo-black-gray dark:hover:bg-gray-300 hover:bg-gray-300 hover:text-black tracking-widest transition-all duration-200 dark:border-gray-800  py-1 pr-6 pl-3'>
-                <Link href={sLink.to} target={link?.target}>
+                <Link href={sLink.href} target={link?.target}>
                   <span className='text-sm'>
                     {link?.icon && <i className={sLink?.icon}> &nbsp; </i>}
                     {sLink.title}
