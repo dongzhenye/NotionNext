@@ -24,6 +24,9 @@ const ClerkProvider = dynamic(() =>
   import('@clerk/nextjs').then(m => m.ClerkProvider)
 )
 
+// 在文件顶部添加 import
+import { SpeedInsights } from '@vercel/speed-insights/next'
+
 /**
  * App挂载DOM 入口文件
  * @param {*} param0
@@ -65,9 +68,15 @@ const MyApp = ({ Component, pageProps }) => {
   return (
     <>
       {enableClerk ? (
-        <ClerkProvider localization={zhCN}>{content}</ClerkProvider>
+        <ClerkProvider localization={zhCN}>
+          {content}
+          <SpeedInsights />
+        </ClerkProvider>
       ) : (
-        content
+        <>
+          {content}
+          <SpeedInsights />
+        </>
       )}
     </>
   )
