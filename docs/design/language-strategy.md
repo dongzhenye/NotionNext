@@ -13,7 +13,7 @@ NotionNext博客系统支持多语言功能，但在某些场景下的语言重�
 
 ## 二、URL结构设计
 
-```
+```plaintext
 # 根域名访问
 example.com                 -> 默认语言版本
 example.com/en             -> 英文版本首页
@@ -27,6 +27,7 @@ example.com/en/article/xxx -> 英文版本文章
 ## 三、语言决策策略
 
 ### 1. 根域名访问策略
+
 ```javascript
 ROOT_LANG_STRATEGY: {
   ENABLE_AUTO_REDIRECT: false,
@@ -39,6 +40,7 @@ ROOT_LANG_STRATEGY: {
 ```
 
 ### 2. 站内导航策略
+
 ```javascript
 NAVIGATION_STRATEGY: {
   ENABLE_AUTO_REDIRECT: true,
@@ -52,6 +54,7 @@ NAVIGATION_STRATEGY: {
 ```
 
 ### 3. 直接着陆策略
+
 ```javascript
 DIRECT_ACCESS_STRATEGY: {
   ENABLE_AUTO_REDIRECT: true,
@@ -102,6 +105,7 @@ const LANGUAGE_CONFIG = {
 ## 五、关键实现细节
 
 ### 1. 语言切换处理
+
 ```javascript
 function handleLanguageSwitch(newLang) {
   // 1. 验证语言代码
@@ -128,6 +132,7 @@ function handleLanguageSwitch(newLang) {
 ```
 
 ### 2. SEO优化
+
 ```html
 <!-- 在头部添加语言元数据 -->
 <head>
@@ -138,6 +143,7 @@ function handleLanguageSwitch(newLang) {
 ```
 
 ### 3. 降级处理
+
 ```javascript
 function handleLanguageFallback(requestedLang, content) {
   if (!content) {
@@ -160,11 +166,13 @@ function handleLanguageFallback(requestedLang, content) {
 在根域名访问时，我们选择不使用浏览器语言进行自动重定向。
 
 **原有方案**：
+
 - 检测浏览器语言设置
 - 根据语言设置自动重定向到对应语言版本
 - 参考了一些国际化网站的实践
 
 **存在的问题**：
+
 1. 违背用户意图：
    - 用户直接访问主域名可能有明确的语言预期
    - 自动重定向可能导致困惑和不必要的跳转
@@ -176,6 +184,7 @@ function handleLanguageFallback(requestedLang, content) {
    - 不同爬虫可能获得不同的语言版本
 
 **最终决策**：
+
 - 仅使用：URL路径 > 用户选择 > 站点默认语言
 - 提供清晰的语言切换界面
 - 记住用户的语言选择
@@ -188,6 +197,7 @@ function handleLanguageFallback(requestedLang, content) {
 **参数方式**：`example.com/article/123?lang=en`
 
 **决策依据**：
+
 1. **持久性考虑**
    - 路径：✓ 表达资源的永久性特征
    - 参数：✗ 通常用于临时或可选设置
@@ -209,6 +219,7 @@ function handleLanguageFallback(requestedLang, content) {
 我们为不同的访问场景设计了不同的语言策略。
 
 **场景差异**：
+
 1. **站内导航**
    - 用户已在特定语言环境中浏览
    - 存在明确的会话上下文
@@ -220,30 +231,35 @@ function handleLanguageFallback(requestedLang, content) {
    - 需要考虑更多默认行为
 
 **策略区别**：
+
 - 站内导航：优先保持当前会话的语言上下文
 - 直接着陆：更多依赖URL路径和用户历史选择
 
 ### 4. 常见问题（FAQ）
 
 **Q1: 为什么不同时支持路径和参数方式？**
+
 - 增加了系统复杂性
 - 可能导致重复内容问题
 - 不利于SEO和缓存优化
 - 建议统一使用路径方式
 
 **Q2: 用户语言选择应该保存多久？**
+
 - 默认30天
 - 可通过配置调整
 - 考虑到用户可能在不同场景下有不同需求
 - 提供清除选择的选项
 
 **Q3: 如何处理内容不存在的情况？**
+
 - 使用配置的fallback语言
 - 显示清晰的提示信息
 - 提供切换到可用语言版本的选项
 - 记录缺失内容以便后续补充
 
 **Q4: 搜索引擎如何处理多语言版本？**
+
 - 使用hreflang标签指明语言关系
 - 设置清晰的x-default语言
 - 避免混合使用不同的URL结构
