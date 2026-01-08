@@ -179,7 +179,14 @@ git push origin deploy --force
 /test/
 ```
 
-### 4. 自动化脚本
+### 5. 更新完成后
+- **务必切回 deploy 分支**，避免误改 main
+  ```bash
+  git checkout deploy
+  ```
+- main 分支应保持与 upstream 同步，不应有本地修改
+
+### 6. 自动化脚本
 
 创建更新脚本 `update-upstream.sh`：
 ```bash
