@@ -131,8 +131,9 @@ yarn dev
 # - 各种 API keys
 # 合并新增的配置项
 
-# package.json - 通常接受上游
-git checkout --theirs package.json
+# package.json - 手动合并
+# 接受上游的版本更新，但保留 deploy 分支特有的依赖
+# 例如 @vercel/speed-insights 是 deploy 独有的，需保留
 
 # 主题配置文件 - 根据实际情况
 # 如果有自定义，需要手动合并
@@ -237,13 +238,18 @@ yarn install
 
 记录每次更新的重要信息：
 
-```markdown
+### 2026-01-08
+- 从 v4.8.6 更新到 v4.9.2（81 commits）
+- 新增功能：API 限流、安全中间件、Jest 测试框架、CSDN/掘金分享
+- 新增文件：RateLimiter.ts, validation.js, errorHandler.js, security.js
+- 冲突文件：package.json, yarn.lock
+- 解决策略：采用上游版本，保留 @vercel/speed-insights
+
 ### 2025-07-12
 - 从 commit [98b4d27e] 更新到 [c5e94337]
 - 新增功能：proxio 和 typography 主题
 - 修复：若干 bug 修复和性能优化
 - 冲突文件：yarn.lock（已解决）
-```
 
 ## 社区资源
 
