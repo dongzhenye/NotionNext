@@ -7,9 +7,11 @@
 - **托管平台**: GitHub
 - **部署平台**: Vercel
 - **分支管理策略**:
-  - `main` 分支：用于同步上游（tangly1024/NotionNext）的更新，保持原始代码
+  - `main` 分支：与上游（tangly1024/NotionNext）保持基本一致，允许紧急安全补丁
   - `deploy` 分支：生产环境分支，包含个性化配置和自定义修改
   - 其他分支：用于功能开发和实验
+
+  > **注意**：Vercel 自动生成的安全 PR 默认目标是 main 分支。合并后 main 会临时领先 upstream，待 upstream 发布相同补丁后会自动对齐。这是可接受的权衡。
 
 ## 更新流程
 
@@ -251,6 +253,7 @@ yarn install
 - 新增文件：RateLimiter.ts, validation.js, errorHandler.js, security.js
 - 冲突文件：package.json, yarn.lock
 - 解决策略：采用上游版本，保留 @vercel/speed-insights
+- **安全修复**：Next.js 14.2.30 → 14.2.35 (CVE-2025-55182, CVE-2025-66478 RCE 漏洞)
 
 ### 2025-07-12
 - 从 commit [98b4d27e] 更新到 [c5e94337]
