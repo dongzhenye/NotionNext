@@ -2,7 +2,7 @@
 
 ## 2026-10-27：deploy 分支升级至 Next.js 15
 
-基线为 `origin/deploy@3e01368`，不合入上游 `main`，不涉及 Astro 博客。验证使用 Node.js 22.23.4、Yarn 1.22.22 和隔离工作区；本轮未推送、发布或调用真实 Notion/Clerk 服务。
+基线为 `origin/deploy@3e01368`，不合入上游 `main`，不涉及 Astro 博客。验证使用 Node.js 22.23.4、Yarn 1.22.22 和隔离工作区；本地升级验证阶段未推送、发布或调用真实 Notion/Clerk 服务；后续经用户批准的发布尝试见文末。
 
 ### 变更范围
 
@@ -39,3 +39,14 @@ Yarn 全量审计按依赖路径重复计数：原始 391 条（6 critical、256
 2. `react-notion-x@7.7.1 → katex@0.16.22`：低风险 [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7)，既有原型污染可能绕过信任限制。修复版本为 0.18.2，超出渲染器声明的 `^0.16.21`；需单独验证渲染器升级。
 
 真实 Notion 数据、Clerk 登录、第三方集成和生产部署尚未验收。发布需另行确认，并结合实际启用功能评估上述风险。
+
+
+### 已授权发布尝试与阻断
+
+用户于 2026-10-27 确认发布，升级候选已推送并创建 [PR #3](https://github.com/dongzhenye/NotionNext/pull/3)，目标仍为 `deploy`。尚未合并或切换正式域名。
+
+首个 Vercel Preview `dpl_7QM8KumcRKqWWNj2bd7m5Ca2w6zq` 构建失败：真实 Notion `loadPageChunk` 请求返回 403 Forbidden，分类页随后因缺少数据报错。本地用相同版本的 Notion SDK 只读请求也返回 403；未修改数据源权限、添加认证凭据、写入 Notion 或用空数据绕过构建。
+
+云端日志另发现 `engines.node >=20` 覆盖项目的 Node 22 设置并自动选择 Node 24，现收紧为 `22.x`，与 `.nvmrc` 及本地已验证环境对齐。该单行修正经独立复核、冻结安装通过；不将它视为已解决数据源 403。
+
+发布前正式站点的首页文章列表为空、标题为 `undefined | undefined`，三个 RSS 文章地址均返回无正文的 loading 页面；这些现象已在上线前记录，不归因于未上线的候选。生产仍保留原部署 `dpl_EsAQUMNv39nwi6amPXU7jgxBzrGb`。后续先恢复并核验现有内容源读取，再继续发布；不借依赖升级扩大为内容源迁移或权限重构。
