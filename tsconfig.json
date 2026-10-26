@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "target": "ES2017",
     "paths": {
       "@/*": ["./*"],
       "@/blog.config": ["./blog.config"],
