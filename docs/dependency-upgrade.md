@@ -63,3 +63,5 @@ Yarn 全量审计按依赖路径重复计数：原始 391 条（6 critical、256
 修复后的冻结安装、TypeScript 检查和离线内容构建通过；离线构建读取夹具 42 次、外发请求 0，公开文章与正文生成、草稿排除四项检查全部通过。完整 Jest 仍为既有 3 项断言失败和 LazyImage 套件加载失败；新增 4 项回归测试通过。使用真实公开内容源的 Node 22 本地生产构建生成 90/90 个静态页面并退出 0；该构建仅读取 Notion，未使用私人 token。英文内容源的个别 `queryCollection` 请求仍返回 403，`notion-client` 降级处理后未阻断构建；需在 Preview 抽样英文页面，不将 90/90 等同于所有 collection view 完整。
 
 适配器在站点数据转换、单篇文章转换和批量补拉入口执行。最外层缓存若命中过去保存的双层包装，仍可绕过转换器；新 Vercel 构建未配置 Redis 且不复用本地 `data.json`，不受旧缓存影响。其他持久化环境在升级时应失效 Notion 数据缓存。待新 Vercel Preview 使用真实内容源验证成功后再合并发布。
+
+Next.js 15 预览另暴露 RSS 时序问题：首页 `getStaticProps` 启动异步 `generateRss` 后立即返回，Vercel 在文件写完前已收集 `public/`，导致 `/rss/feed.xml` 落入动态页面路由。现在显式等待 RSS 生成，并用先失败后通过的回归测试保护该构建边界。
