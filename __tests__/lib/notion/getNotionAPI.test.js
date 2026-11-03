@@ -15,7 +15,7 @@ describe('Notion API edge compatibility', () => {
           this.options = options
         }
 
-        async getPage() {
+        getPage() {
           const userAgent = this.options.ofetchOptions?.headers?.['User-Agent']
           if (
             this.options.apiBaseUrl !== 'https://app.notion.com/api/v3' ||
@@ -24,7 +24,7 @@ describe('Notion API edge compatibility', () => {
           ) {
             throw new Error('Notion edge compatibility is not configured')
           }
-          return { recordMap: { block: {} } }
+          return Promise.resolve({ recordMap: { block: {} } })
         }
       }
     }))

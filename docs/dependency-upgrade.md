@@ -31,12 +31,12 @@
 
 ### 安全审计与剩余风险
 
-Yarn 全量审计按依赖路径重复计数：原始 391 条（6 critical、256 high、112 moderate、17 low），更新后 295 条（0 critical、209 high、72 moderate、14 low）。去重后公告数量为 124 → 48，涉及包数量为 28 → 17。开发工具链仍有告警，不能将此次升级表述为全量安全审计通过。
+Yarn 全量审计按依赖路径重复计数：原始 391 条（6 critical、256 high、112 moderate、17 low），最终 315 条（0 critical、209 high、90 moderate、16 low）。Notion 三件套对齐 7.10.0 后包含 2026-10-27 新公布、尚无修复版本的 Jest/deepmerge 开发链低危公告；本轮不强制覆盖。开发工具链仍有告警，不能将此次升级表述为全量安全审计通过。
 
 生产依赖审计仍有两个不同公告：
 
 1. `@clerk/nextjs@5.7.6 → @clerk/clerk-react@5.12.0`：高风险 [GHSA-w24r-5266-9c3c](https://github.com/advisories/GHSA-w24r-5266-9c3c)，涉及组合组织、计费或重新验证条件时的授权校验。修复需要 clerk-react 5.61.6 及以后，超出当前 SDK 的精确依赖声明；本轮不强行覆盖。启用或发布 Clerk 权限保护相关功能前，应升级兼容 SDK 并验证实际认证流程。
-2. `react-notion-x@7.7.1 → katex@0.16.22`：低风险 [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7)，既有原型污染可能绕过信任限制。修复版本为 0.18.2，超出渲染器声明的 `^0.16.21`；需单独验证渲染器升级。
+2. `react-notion-x@7.10.0 → katex@0.16.21`：低风险 [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7)，既有原型污染可能绕过信任限制。上游 7.10.0 精确锁定 KaTeX 0.16.21，比此分支原解析的 0.16.22 低一个补丁版，但两者均受影响。修复版本为 0.18.2，超出渲染器的精确依赖声明；需单独验证渲染器升级。
 
 真实 Notion 数据、Clerk 登录、第三方集成和生产部署尚未验收。发布需另行确认，并结合实际启用功能评估上述风险。
 
@@ -55,6 +55,11 @@ Yarn 全量审计按依赖路径重复计数：原始 391 条（6 critical、256
 
 - 默认端点改为 `https://app.notion.com/api/v3`，保留 `API_BASE_URL` 环境变量覆盖能力。
 - 向 `notion-client` 的 `ofetchOptions` 注入项目标识型 `User-Agent`，不增加私人 Notion token，不修改页面分享权限。
+- `notion-client`、`notion-utils`、`react-notion-x` 从 7.7.1 对齐到上游的 7.10.0；7.7.1 能读取根页面，但不能完整处理当前 collection query。
+- 移植上游的最小 record-map 解包适配，将新的 `{ spaceId, value: { value, role } }` 结构恢复为该分支数据管道使用的 `{ value }` 形式。适配同时覆盖站点列表、单篇文章和批量补拉 block，使根页属性清理、URL 预处理与父子 block 关系仍按旧语义执行。不移植上游的站点架构、缓存、OAuth 或主题变更。
 - 新增回归测试保护端点和请求头的组合；测试在修复前按预期失败，修复后通过。
+- 新增 record-map 双层包装回归测试；测试在适配器存在前因模块缺失而失败，适配后通过。
 
-修复后的冻结安装、TypeScript 检查和离线内容构建通过；离线构建读取夹具 45 次、外发请求 0，公开文章与正文生成、草稿排除四项检查全部通过。完整 Jest 仍为既有 3 项断言失败和 LazyImage 套件加载失败；新回归测试通过。待新 Vercel Preview 使用真实内容源验证成功后再合并发布。
+修复后的冻结安装、TypeScript 检查和离线内容构建通过；离线构建读取夹具 42 次、外发请求 0，公开文章与正文生成、草稿排除四项检查全部通过。完整 Jest 仍为既有 3 项断言失败和 LazyImage 套件加载失败；新增 4 项回归测试通过。使用真实公开内容源的 Node 22 本地生产构建生成 90/90 个静态页面并退出 0；该构建仅读取 Notion，未使用私人 token。英文内容源的个别 `queryCollection` 请求仍返回 403，`notion-client` 降级处理后未阻断构建；需在 Preview 抽样英文页面，不将 90/90 等同于所有 collection view 完整。
+
+适配器在站点数据转换、单篇文章转换和批量补拉入口执行。最外层缓存若命中过去保存的双层包装，仍可绕过转换器；新 Vercel 构建未配置 Redis 且不复用本地 `data.json`，不受旧缓存影响。其他持久化环境在升级时应失效 Notion 数据缓存。待新 Vercel Preview 使用真实内容源验证成功后再合并发布。
