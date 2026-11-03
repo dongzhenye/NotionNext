@@ -49,4 +49,12 @@ Yarn 全量审计按依赖路径重复计数：原始 391 条（6 critical、256
 
 云端日志另发现 `engines.node >=20` 覆盖项目的 Node 22 设置并自动选择 Node 24，现收紧为 `22.x`，与 `.nvmrc` 及本地已验证环境对齐。该单行修正经独立复核、冻结安装通过；不将它视为已解决数据源 403。
 
-发布前正式站点的首页文章列表为空、标题为 `undefined | undefined`，三个 RSS 文章地址均返回无正文的 loading 页面；这些现象已在上线前记录，不归因于未上线的候选。生产仍保留原部署 `dpl_EsAQUMNv39nwi6amPXU7jgxBzrGb`。后续先恢复并核验现有内容源读取，再继续发布；不借依赖升级扩大为内容源迁移或权限重构。
+发布前正式站点的首页文章列表为空、标题为 `undefined | undefined`，三个 RSS 文章地址均返回无正文的 loading 页面；这些现象已在上线前记录，不归因于未上线的候选。生产仍保留原部署 `dpl_EsAQUMNv39nwi6amPXU7jgxBzrGb`。
+
+2026-11-04 根因复现确认：旧 `www.notion.so/api/v3` 端点在 Node 请求未带 `User-Agent` 时返回 403；同一页面仅增加标识性请求头即成功，`app.notion.com/api/v3` 也能直接读取。本轮只采用上游已使用的最小修复：
+
+- 默认端点改为 `https://app.notion.com/api/v3`，保留 `API_BASE_URL` 环境变量覆盖能力。
+- 向 `notion-client` 的 `ofetchOptions` 注入项目标识型 `User-Agent`，不增加私人 Notion token，不修改页面分享权限。
+- 新增回归测试保护端点和请求头的组合；测试在修复前按预期失败，修复后通过。
+
+修复后的冻结安装、TypeScript 检查和离线内容构建通过；离线构建读取夹具 45 次、外发请求 0，公开文章与正文生成、草稿排除四项检查全部通过。完整 Jest 仍为既有 3 项断言失败和 LazyImage 套件加载失败；新回归测试通过。待新 Vercel Preview 使用真实内容源验证成功后再合并发布。
